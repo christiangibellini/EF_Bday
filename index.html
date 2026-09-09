@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Emily's Birthday Quest</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%82%3C/text%3E%3C/svg%3E">
+<script>
+  // Restore the real path after a GitHub Pages 404 redirect (harmless everywhere else)
+  (function () {
+    var redirect = sessionStorage.redirect;
+    delete sessionStorage.redirect;
+    if (redirect && redirect !== window.location.href) {
+      history.replaceState(null, null, redirect);
+    }
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0D0B1E;
+    --void-2:#161031;
+    --panel:#18143A;
+    --edge:#F3EEFF;
+    --pink:#FF4FC3;
+    --cyan:#3EF0FF;
+    --yellow:#FFD23E;
+    --green:#5CFFB3;
+    --red:#FF6B6B;
+    --ink:#F3EEFF;
+    --muted:#9C93C9;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:var(--void);
+    color:var(--ink);
+    font-family:'VT323', monospace;
+    font-size:22px;
+    line-height:1.5;
+    position:relative;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    z-index:9998;
+    background:
+      repeating-linear-gradient(rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.15) 3px),
+      radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.45) 100%);
+  }
+  .press{font-family:'Press Start 2P', monospace;}
+  #app{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:70px 16px 40px;
+  }
+  .panel{
+    background:var(--panel);
+    border:3px solid var(--edge);
+    box-shadow:8px 8px 0 var(--pink);
+    padding:34px 28px;
+    max-width:520px;
+    width:100%;
+    position:relative;
+  }
+  .panel.wide{ max-width:820px; }
+  .eyebrow-level{
+    font-family:'Press Start 2P', monospace;
+    font-size:11px;
+    color:var(--yellow);
+    margin:0 0 18px;
+    line-height:1.6;
+  }
+  .eyebrow-level.success{ color:var(--green); }
+  h1.title{
+    font-family:'Press Start 2P', monospace;
+    font-size:clamp(18px,5vw,26px);
+    line-height:1.7;
+    margin:0 0 14px;
+    color:var(--ink);
+  }
+  h2.sub-title{
+    font-family:'Press Start 2P', monospace;
+    font-size:clamp(14px,3.6vw,18px);
+    line-height:1.7;
+    margin:0 0 14px;
+    color:var(--cyan);
+  }
+  p.prompt{ font-size:22px; margin:0 0 22px; color:var(--ink); }
+  p.small{ font-size:17px; color:var(--muted); }
+  .btn{
+    font-family:'VT323', monospace;
+    font-size:22px;
+    letter-spacing:.5px;
+    background:var(--cyan);
+    color:var(--void);
+    border:3px solid var(--edge);
+    padding:12px 26px;
+    cursor:pointer;
+    box-shadow:5px 5px 0 var(--void-2);
+    transition:transform .05s ease;
+  }
+  .btn:active{ transform:translate(5px,5px); box-shadow:none; }
+  .btn:focus-visible{ outline:3px solid var(--yellow); outline-offset:3px; }
+  .btn-yellow{ background:var(--yellow); }
+  .btn-pink{ background:var(--pink); }
+  .btn-row{ margin-top:6px; display:flex; gap:12px; flex-wrap:wrap; }
+  .btn[disabled]{ opacity:.4; cursor:not-allowed; }
+
+  .digit-row{ display:flex; gap:10px; justify-content:center; margin:26px 0 10px; flex-wrap:wrap; }
+  .digit-box{
+    width:44px; height:56px;
+    text-align:center;
+    font-family:'Press Start 2P', monospace;
+    font-size:20px;
+    background:var(--void-2);
+    color:var(--cyan);
+    border:3px solid var(--edge);
+    caret-color:var(--cyan);
+  }
+  .digit-box:focus{ outline:3px solid var(--yellow); outline-offset:2px; }
+  .digit-box.ok{ color:var(--green); border-color:var(--green); }
+
+  .text-input{
+    width:100%;
+    font-family:'VT323', monospace;
+    font-size:22px;
+    background:var(--void-2);
+    color:var(--ink);
+    border:3px solid var(--edge);
+    padding:12px 14px;
+    margin-bottom:16px;
+  }
+  .text-input:focus{ outline:3px solid var(--yellow); outline-offset:2px; }
+
+  .feedback{ min-height:26px; color:var(--red); margin-top:14px; }
+  .feedback.ok{ color:var(--green); }
+  .hint{ color:var(--muted); font-size:18px; }
+
+  .shake{ animation:shake .45s; }
+  @keyframes shake{
+    10%,90%{transform:translateX(-2px);}
+    20%,80%{transform:translateX(4px);}
+    30%,50%,70%{transform:translateX(-8px);}
+    40%,60%{transform:translateX(8px);}
+  }
+  .typewrap{ white-space:pre-wrap; min-height:170px; }
+  .cursor-blink{ display:inline-block; width:10px; background:var(--cyan); margin-left:2px; animation:blink 1s steps(1) infinite; }
+  @keyframes blink{ 50%{opacity:0;} }
+
+  .level-tag-fixed{
+    position:fixed; top:14px; left:14px; z-index:50;
+    font-family:'Press Start 2P', monospace; font-size:9px;
+    color:var(--yellow);
+    background:var(--void-2);
+    border:2px solid var(--yellow);
+    padding:7px 10px;
+  }
+  .mute-btn{
+    position:fixed; top:12px; right:12px; z-index:50;
+    background:transparent; border:2px solid var(--muted); color:var(--ink);
+    width:38px; height:38px; font-size:16px; cursor:pointer;
+  }
+  .mute-btn:focus-visible{ outline:3px solid var(--yellow); }
+
+  .game-hud{ display:flex; justify-content:space-between; font-size:20px; color:var(--yellow); margin-bottom:10px; }
+  .game-canvas{
+    background:var(--void-2);
+    border:3px solid var(--edge);
+    box-shadow:6px 6px 0 var(--cyan);
+    touch-action:none;
+    display:block;
+    margin:0 auto;
+    max-width:100%;
+    height:auto;
+  }
+
+  .map-wrap{ position:relative; }
+  .map-svg{
+    width:100%; height:auto; display:block;
+    border:3px solid var(--edge);
+    box-shadow:8px 8px 0 var(--pink);
+    background:#0A1730;
+    cursor:crosshair;
+    touch-action:manipulation;
+  }
+  .map-popup{
+    position:absolute;
+    transform:translate(-50%,-115%);
+    background:var(--void-2);
+    border:2px solid var(--cyan);
+    padding:8px 12px;
+    font-size:18px;
+    white-space:nowrap;
+    pointer-events:none;
+  }
+  .map-title{ font-family:'Press Start 2P', monospace; font-size:clamp(14px,3.2vw,18px); line-height:1.7; color:var(--ink); margin:0 0 10px;}
+  .map-status{ margin-top:14px; color:var(--muted); font-size:18px; }
+  .reveal-panel{
+    margin-top:20px; padding:20px; background:var(--void-2);
+    border:3px solid var(--green); box-shadow:6px 6px 0 var(--green);
+  }
+  .reveal-title{ font-family:'Press Start 2P', monospace; font-size:16px; color:var(--green); line-height:1.8; margin:0 0 12px; }
+
+  .confetti-canvas{ position:fixed; inset:0; z-index:9999; pointer-events:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .shake{ animation:none; }
+    .cursor-blink{ animation:none; }
+  }
+
+  @media (max-width:420px){
+    .digit-box{ width:36px; height:48px; font-size:16px; }
+    .panel{ padding:26px 18px; }
+  }
+</style>
+</head>
+<body>
+<button class="mute-btn" id="muteBtn" aria-label="Toggle sound">🔊</button>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var PASSCODE = "100997";
+  var TOTAL_LEVELS = 6; // pages 2-7 map to levels 1-6
+  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- audio ----------
+  var muted = false;
+  var audioCtx = null;
+  function getCtx(){
+    if(!audioCtx){
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if(AC) audioCtx = new AC();
+    }
+    return audioCtx;
+  }
+  function beep(freq, dur, type, vol){
+    if(muted) return;
+    try{
+      var ctx = getCtx();
+      if(!ctx) return;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = type || 'square';
+      osc.frequency.value = freq;
+      gain.gain.value = vol || 0.05;
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+      osc.stop(ctx.currentTime + dur);
+    }catch(e){}
+  }
+  function beepBlip(){ beep(520, .06, 'square', .04); }
+  function beepFail(){ beep(140, .25, 'sawtooth', .05); }
+  function beepSuccess(){
+    [523,659,784].forEach(function(f,i){ setTimeout(function(){ beep(f,.15,'square',.05); }, i*90); });
+  }
+  function beepWin(){
+    [523,659,784,1046].forEach(function(f,i){ setTimeout(function(){ beep(f,.2,'square',.06); }, i*110); });
+  }
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    muted = !muted;
+    this.textContent = muted ? '🔇' : '🔊';
+  });
+
+  // ---------- confetti ----------
+  function launchConfetti(){
+    var count = reducedMotion ? 40 : 150;
+    var duration = reducedMotion ? 1200 : 2600;
+    var canvas = document.createElement('canvas');
+    canvas.className = 'confetti-canvas';
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    document.body.appendChild(canvas);
+    var ctx = canvas.getContext('2d');
+    var colors = ['#FF4FC3','#3EF0FF','#FFD23E','#5CFFB3','#F3EEFF'];
+    var particles = [];
+    for(var i=0;i<count;i++){
+      particles.push({
+        x: Math.random()*canvas.width,
+        y: -20 - Math.random()*canvas.height*0.4,
+        w: 6+Math.random()*6,
+        h: 8+Math.random()*10,
+        color: colors[(Math.random()*colors.length)|0],
+        vy: 2+Math.random()*3,
+        vx: -1.5+Math.random()*3,
+        rot: Math.random()*360,
+        vr: -6+Math.random()*12
+      });
+    }
+    var start = null;
+    function frame(ts){
+      if(!start) start = ts;
+      var elapsed = ts-start;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      particles.forEach(function(p){
+        p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.rot*Math.PI/180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+        ctx.restore();
+      });
+      if(elapsed < duration) requestAnimationFrame(frame);
+      else canvas.remove();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- routing ----------
+  function navigate(path, replace){
+    if(replace) history.replaceState({}, '', path);
+    else history.pushState({}, '', path);
+    render();
+  }
+  window.addEventListener('popstate', render);
+
+  function currentPage(){
+    var path = window.location.pathname.replace(/\/+$/,'');
+    var seg = path.split('/').filter(Boolean)[0] || '1';
+    var n = parseInt(seg, 10);
+    if(!n || n < 1 || n > 7) return 1;
+    return n;
+  }
+
+  var LEVEL_OF_PAGE = {2:1,3:2,4:3,5:4,6:5,7:6};
+
+  function levelTag(page){
+    if(!LEVEL_OF_PAGE[page]) return null;
+    var el = document.createElement('div');
+    el.className = 'level-tag-fixed';
+    el.textContent = 'LEVEL ' + LEVEL_OF_PAGE[page] + ' OF ' + TOTAL_LEVELS;
+    return el;
+  }
+
+  // ---------- typewriter ----------
+  function typewrite(el, text, speed, done){
+    if(reducedMotion){ el.textContent = text; if(done) done(); return; }
+    var i = 0;
+    var cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    cursor.textContent = '\u00A0';
+    function step(){
+      if(i <= text.length){
+        el.textContent = text.slice(0,i);
+        el.appendChild(cursor);
+        i++;
+        setTimeout(step, speed);
+      } else {
+        cursor.remove();
+        if(done) done();
+      }
+    }
+    step();
+  }
+
+  // ================= PAGE 1: PASSCODE GATE =================
+  function renderGate(app){
+    var wrap = document.createElement('div');
+    wrap.className = 'panel';
+    wrap.innerHTML =
+      '<h1 class="title">EMILY&rsquo;S<br>BIRTHDAY QUEST</h1>' +
+      '<p class="prompt" style="margin-bottom:6px;">SYSTEM LOCKED. Enter the access code to begin.</p>' +
+      '<p class="small">hint: a date that means something to us</p>' +
+      '<div class="digit-row" id="digitRow"></div>' +
+      '<div class="btn-row"><button class="btn" id="unlockBtn">UNLOCK</button></div>' +
+      '<p class="feedback" id="gateFeedback"></p>';
+    app.appendChild(wrap);
+
+    var row = wrap.querySelector('#digitRow');
+    var boxes = [];
+    for(var i=0;i<6;i++){
+      var box = document.createElement('input');
+      box.className = 'digit-box';
+      box.setAttribute('maxlength','1');
+      box.setAttribute('inputmode','numeric');
+      box.setAttribute('pattern','[0-9]*');
+      box.setAttribute('autocomplete','off');
+      box.setAttribute('aria-label','digit '+(i+1));
+      row.appendChild(box);
+      boxes.push(box);
+    }
+    boxes[0].focus();
+
+    boxes.forEach(function(box, idx){
+      box.addEventListener('input', function(){
+        box.value = box.value.replace(/[^0-9]/g,'');
+        if(box.value && idx < boxes.length-1){ boxes[idx+1].focus(); }
+        if(idx === boxes.length-1 && box.value){ checkCode(); }
+      });
+      box.addEventListener('keydown', function(e){
+        if(e.key === 'Backspace' && !box.value && idx > 0){ boxes[idx-1].focus(); }
+        if(e.key === 'Enter'){ checkCode(); }
+      });
+    });
+
+    var feedback = wrap.querySelector('#gateFeedback');
+
+    function checkCode(){
+      var val = boxes.map(function(b){ return b.value; }).join('');
+      if(val.length < 6) return;
+      if(val === PASSCODE){
+        beepSuccess();
+        boxes.forEach(function(b){ b.classList.add('ok'); b.disabled = true; });
+        feedback.className = 'feedback ok';
+        feedback.textContent = 'ACCESS GRANTED';
+        setTimeout(function(){ navigate('/2'); }, 900);
+      } else {
+        beepFail();
+        wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+        feedback.className = 'feedback';
+        feedback.textContent = 'ACCESS DENIED. TRY AGAIN.';
+        boxes.forEach(function(b){ b.value=''; });
+        boxes[0].focus();
+      }
+    }
+
+    wrap.querySelector('#unlockBtn').addEventListener('click', checkCode);
+  }
+
+  // ================= PAGE 2: WELCOME =================
+  function renderWelcome(app){
+    var wrap = document.createElement('div');
+    wrap.className = 'panel';
+    wrap.innerHTML =
+      '<p class="eyebrow-level">LEVEL 1 OF ' + TOTAL_LEVELS + '</p>' +
+      '<h1 class="title">HEY BESTIE.</h1>' +
+      '<p class="typewrap" id="typeTarget"></p>' +
+      '<div class="btn-row" id="btnRow" style="display:none;"><button class="btn btn-yellow" id="startBtn">START THE QUEST</button></div>';
+    app.appendChild(wrap);
+
+    var msg = "Happy birthday, Emily.\n\nI made you a quest instead of just a card, because you were never going to be a \u2018just a card\u2019 kind of birthday.\n\nThere are a few levels between you and your present \u2014 some riddles, one very important arcade game, and one big reveal at the end.\n\nReady?";
+    typewrite(wrap.querySelector('#typeTarget'), msg, reducedMotion ? 0 : 18, function(){
+      wrap.querySelector('#btnRow').style.display = 'flex';
+    });
+
+    wrap.querySelector('#startBtn').addEventListener('click', function(){ navigate('/3'); });
+  }
+
+  // ================= RIDDLE PAGES (3,4,5) =================
+  var RIDDLES = [
+    {
+      level: 2,
+      prompt: "Before I knew your coffee order, or your star sign, I knew this: a little spot with wood-fired pizza, and a first date that ran about four hours longer than either of us planned.\n\nType the name of the place where it all started.",
+      accept: ["noi pizzeria","noi"],
+      hint: "It's Italian, two words, and starts with N.",
+      next: "/4"
+    },
+    {
+      level: 3,
+      prompt: "It's not your name. It's not from a movie. It's just the word I've called you since the very beginning \u2014 the one you still look up for, even in a crowded room.\n\nWhat do I call you?",
+      accept: ["bestie"],
+      hint: "One word. You're probably being called it in your head right now.",
+      next: "/5"
+    },
+    {
+      level: 4,
+      prompt: "You collect two kinds of beautiful things: the kind you wear, and the kind you grow.\n\nName one of your favourite things to do.",
+      accept: ["jewellery","jewelry","gardening","garden","plants","plant"],
+      hint: "Sparkly, or leafy \u2014 either answer works.",
+      next: "/6"
+    }
+  ];
+
+  function renderRiddle(app, cfg){
+    var wrap = document.createElement('div');
+    wrap.className = 'panel';
+    wrap.innerHTML =
+      '<p class="eyebrow-level" id="levelLabel">LEVEL ' + cfg.level + ' OF ' + TOTAL_LEVELS + '</p>' +
+      '<p class="prompt" style="white-space:pre-wrap;">' + cfg.prompt + '</p>' +
+      '<input type="text" id="riddleInput" class="text-input" placeholder="your answer" autocomplete="off" autocapitalize="off" spellcheck="false">' +
+      '<div class="btn-row"><button class="btn" id="submitBtn">SUBMIT ANSWER</button></div>' +
+      '<p class="feedback" id="riddleFeedback"></p>' +
+      '<p class="hint" id="riddleHint" style="display:none;"></p>';
+    app.appendChild(wrap);
+
+    var input = wrap.querySelector('#riddleInput');
+    var feedback = wrap.querySelector('#riddleFeedback');
+    var hintEl = wrap.querySelector('#riddleHint');
+    var attempts = 0;
+    input.focus();
+
+    function isCorrect(val){
+      return cfg.accept.some(function(a){
+        return val === a || (val.length > 2 && val.indexOf(a) !== -1);
+      });
+    }
+
+    function submit(){
+      var val = input.value.trim().toLowerCase();
+      if(!val) return;
+      if(isCorrect(val)){
+        beepSuccess();
+        wrap.innerHTML =
+          '<p class="eyebrow-level success">LEVEL ' + cfg.level + ' COMPLETE</p>' +
+          '<p class="prompt">Nice one, bestie.</p>' +
+          '<div class="btn-row"><button class="btn btn-yellow" id="nextBtn">NEXT LEVEL</button></div>';
+        wrap.querySelector('#nextBtn').addEventListener('click', function(){ navigate(cfg.next); });
+      } else {
+        attempts++;
+        beepFail();
+        wrap.classList.remove('shake'); void wrap.offsetWidth; wrap.classList.add('shake');
+        feedback.textContent = 'Not quite \u2014 try again.';
+        if(attempts >= 2){
+          hintEl.style.display = 'block';
+          hintEl.textContent = 'Hint: ' + cfg.hint;
+        }
+        input.value = '';
+        input.focus();
+      }
+    }
+
+    wrap.querySelector('#submitBtn').addEventListener('click', submit);
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') submit(); });
+  }
+
+  // ================= PAGE 6: GAME =================
+  function renderGame(app){
+    var wrap = document.createElement('div');
+    wrap.className = 'panel';
+    wrap.innerHTML =
+      '<p class="eyebrow-level">LEVEL 5 OF ' + TOTAL_LEVELS + '</p>' +
+      '<p class="prompt">Catch 15 gems before the clock runs out. Move with your mouse, your finger, or the arrow keys.</p>' +
+      '<div class="game-hud"><span id="scoreLabel">\uD83D\uDC8E 0 / 15</span><span id="timeLabel">\u23F1 30</span></div>' +
+      '<canvas id="gameCanvas" class="game-canvas" width="360" height="480"></canvas>' +
+      '<div class="btn-row" id="gameBtnRow"><button class="btn" id="startBtn">PLAY</button></div>' +
+      '<p class="feedback" id="gameFeedback"></p>';
+    app.appendChild(wrap);
+
+    var canvas = wrap.querySelector('#gameCanvas');
+    var ctx = canvas.getContext('2d');
+    var scoreLabel = wrap.querySelector('#scoreLabel');
+    var timeLabel = wrap.querySelector('#timeLabel');
+    var startBtn = wrap.querySelector('#startBtn');
+    var feedback = wrap.querySelector('#gameFeedback');
+    var btnRow = wrap.querySelector('#gameBtnRow');
+
+    var W = canvas.width, H = canvas.height;
+    var TARGET = 15;
+    var basket = { x: W/2, w: 64 };
+    var items = [];
+    var score = 0, timeLeft = 30, running = false, spawnTimer = 0, lastTs = null;
+    var rafId = null, timerInterval = null;
+
+    var GEM_TYPES = [
+      {emoji:'\uD83D\uDC8E', pts:1, weight:6},
+      {emoji:'\uD83D\uDC9B', pts:2, weight:2},
+      {emoji:'\uD83E\uDEA8', pts:0, weight:2}
+    ];
+    function pickType(){
+      var total = GEM_TYPES.reduce(function(s,t){ return s+t.weight; },0);
+      var r = Math.random()*total;
+      for(var i=0;i<GEM_TYPES.length;i++){
+        if(r < GEM_TYPES[i].weight) return GEM_TYPES[i];
+        r -= GEM_TYPES[i].weight;
+      }
+      return GEM_TYPES[0];
+    }
+
+    function pointerX(clientX){
+      var rect = canvas.getBoundingClientRect();
+      return (clientX - rect.left) * (W / rect.width);
+    }
+    canvas.addEventListener('pointermove', function(e){
+      if(!running) return;
+      basket.x = Math.max(basket.w/2, Math.min(W-basket.w/2, pointerX(e.clientX)));
+    });
+    window.addEventListener('keydown', function(e){
+      if(!running) return;
+      if(e.key === 'ArrowLeft') basket.x = Math.max(basket.w/2, basket.x-24);
+      if(e.key === 'ArrowRight') basket.x = Math.min(W-basket.w/2, basket.x+24);
+    });
+
+    function reset(){
+      items = []; score = 0; timeLeft = 30; basket.x = W/2;
+      scoreLabel.textContent = '\uD83D\uDC8E 0 / ' + TARGET;
+      timeLabel.textContent = '\u23F1 30';
+      feedback.textContent = '';
+    }
+
+    function start(){
+      reset();
+      running = true;
+      startBtn.textContent = 'RESTART';
+      lastTs = null;
+      clearInterval(timerInterval);
+      timerInterval = setInterval(function(){
+        timeLeft--;
+        timeLabel.textContent = '\u23F1 ' + timeLeft;
+        if(timeLeft <= 0) endGame(false);
+      }, 1000);
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function endGame(won){
+      running = false;
+      clearInterval(timerInterval);
+      cancelAnimationFrame(rafId);
+      if(won){
+        beepWin();
+        feedback.className = 'feedback ok';
+        feedback.textContent = 'LEVEL CLEARED!';
+        btnRow.innerHTML = '<button class="btn btn-yellow" id="nextBtn">NEXT LEVEL</button>';
+        wrap.querySelector('#nextBtn').addEventListener('click', function(){ navigate('/7'); });
+      } else {
+        feedback.className = 'feedback';
+        feedback.textContent = "Time's up \u2014 you caught " + score + ". Try again?";
+      }
+    }
+
+    function loop(ts){
+      if(!running) return;
+      if(!lastTs) lastTs = ts;
+      var dt = ts - lastTs; lastTs = ts;
+      spawnTimer += dt;
+      var spawnRate = Math.max(380, 750 - score*15);
+      if(spawnTimer > spawnRate){
+        spawnTimer = 0;
+        var type = pickType();
+        items.push({ x: 20+Math.random()*(W-40), y:-20, vy: 1.6+Math.random()*1.2+score*0.02, type: type });
+      }
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle = 'rgba(255,255,255,0.04)';
+      for(var gy=0; gy<H; gy+=20){ for(var gx=0; gx<W; gx+=20){ ctx.fillRect(gx,gy,1,1); } }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '40px serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('\uD83E\uDDFA', basket.x, H-30);
+
+      items = items.filter(function(it){
+        it.y += it.vy;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '30px serif';
+        ctx.fillText(it.type.emoji, it.x, it.y);
+        if(it.y > H-55 && it.y < H-15 && Math.abs(it.x-basket.x) < basket.w/2+10){
+          score += it.type.pts;
+          scoreLabel.textContent = '\uD83D\uDC8E ' + score + ' / ' + TARGET;
+          beepBlip();
+          if(score >= TARGET){ endGame(true); }
+          return false;
+        }
+        return it.y < H+20;
+      });
+
+      if(running) rafId = requestAnimationFrame(loop);
+    }
+
+    startBtn.addEventListener('click', start);
+  }
+
+  // ================= PAGE 7: FINAL MAP =================
+  var VIC_PATH = "M171.3,537.9L152.5,528.0L143.5,529.6L141.7,532.5L134.1,532.2L118.1,521.5L103.6,518.5L90.9,524.3L94.6,532.2L92.6,533.7L88.6,532.1L86.5,536.0L78.3,529.0L75.2,532.8L72.3,530.7L74.6,526.8L72.8,522.8L63.9,512.8L40.0,499.2L40.0,93.7L46.2,101.7L55.0,101.0L57.6,104.7L62.1,101.7L68.7,109.3L71.4,106.5L78.4,112.3L82.4,111.0L83.5,117.0L90.8,114.6L89.4,110.6L101.1,104.6L109.9,108.7L116.4,106.9L117.4,109.3L125.6,105.4L129.2,112.8L135.8,110.7L135.9,113.7L142.1,116.3L141.5,126.1L154.4,129.2L150.7,135.0L150.9,142.3L153.3,143.0L151.4,145.1L154.0,144.6L152.6,146.9L154.6,147.5L152.0,148.3L158.7,153.6L160.0,151.7L158.8,158.6L161.3,158.8L160.5,162.3L164.1,165.5L162.6,169.1L167.1,172.7L173.2,173.4L171.9,168.0L178.4,167.6L177.6,156.8L183.5,155.0L182.3,152.9L185.1,153.2L185.8,149.8L187.4,151.4L185.5,154.1L192.0,158.0L193.4,163.1L196.4,160.0L200.2,164.6L201.6,161.4L205.6,165.4L211.5,163.2L211.1,165.3L220.0,168.0L220.4,170.9L224.4,170.4L222.7,172.4L224.6,174.3L230.4,174.4L228.2,198.7L233.7,213.8L238.4,213.7L240.1,216.8L248.1,215.6L249.7,223.0L247.4,228.6L252.0,233.5L262.0,233.4L271.1,242.7L280.0,244.7L281.6,250.1L290.8,253.8L303.7,269.8L306.0,268.3L310.2,271.3L312.9,279.8L315.2,280.4L314.9,284.8L324.0,291.4L323.6,294.0L331.6,297.6L331.6,302.1L332.9,299.2L334.6,301.9L337.4,300.6L337.0,303.9L339.8,303.0L340.4,306.1L346.8,306.7L351.3,300.3L360.7,301.6L356.1,292.6L361.6,279.7L372.4,276.6L390.6,281.2L404.9,274.8L416.0,287.0L426.9,293.5L434.2,289.7L439.8,296.0L444.9,293.3L452.8,294.6L456.8,298.6L464.7,295.5L464.8,298.6L469.1,297.0L471.5,299.5L475.7,291.0L481.9,293.5L482.1,290.2L485.9,293.7L491.0,291.7L496.6,298.3L500.5,296.8L501.9,300.5L511.8,301.7L517.4,305.9L518.4,302.2L524.7,305.8L531.2,294.7L533.6,297.9L547.7,300.2L554.0,289.1L561.4,288.8L565.9,294.8L568.5,292.9L565.8,290.9L570.0,292.3L578.5,287.3L594.9,294.0L595.8,298.7L601.8,299.1L601.1,306.6L604.8,308.5L604.6,325.4L606.5,326.2L604.8,333.3L611.7,340.6L612.4,350.8L619.1,354.0L610.5,374.1L617.4,373.6L760.0,443.8L744.0,449.0L746.5,442.0L740.9,445.6L741.8,442.9L736.2,439.6L735.9,442.6L739.3,445.0L737.4,445.8L740.0,445.4L743.0,450.6L735.6,461.7L723.2,467.9L721.7,465.8L720.9,470.6L703.5,473.4L693.5,470.8L692.8,466.0L690.8,468.7L692.4,471.1L683.8,471.3L680.8,467.8L677.5,470.8L682.6,471.3L660.2,474.5L646.1,473.6L644.1,469.2L644.5,473.8L611.1,478.4L612.7,472.7L609.8,477.5L607.4,475.2L608.7,479.6L598.6,483.5L599.4,480.8L590.2,482.7L585.3,478.5L574.0,478.0L576.4,481.8L580.9,479.3L577.0,482.1L580.1,485.2L576.9,485.2L578.7,486.8L565.8,496.2L563.1,493.9L558.3,496.2L558.3,501.6L568.2,498.5L575.5,489.8L578.9,490.0L571.5,496.6L593.7,484.5L583.0,488.6L588.1,483.6L597.1,483.2L573.2,497.4L516.4,552.7L507.2,554.1L504.3,559.0L494.5,560.2L495.7,558.6L493.3,556.9L494.9,559.0L490.7,561.6L481.7,561.3L474.1,565.1L469.9,560.3L459.2,562.4L456.9,568.3L463.5,573.4L465.9,583.3L475.4,577.7L477.4,571.0L480.4,572.3L481.5,584.3L477.2,590.7L480.9,599.0L476.8,599.9L476.2,605.8L474.2,606.3L468.2,602.3L469.6,599.3L462.5,592.3L463.6,590.4L455.3,574.3L456.6,578.8L445.9,574.1L442.4,577.1L442.6,580.9L436.1,583.6L429.2,565.7L421.1,557.5L430.0,562.4L428.1,557.5L421.3,556.4L410.7,560.5L401.0,548.8L392.3,546.7L396.8,542.6L395.6,533.8L403.5,534.7L406.1,531.0L401.4,516.8L382.7,515.6L377.4,525.8L380.1,530.9L377.1,530.7L380.9,534.0L371.9,532.5L366.1,536.5L364.8,541.7L356.7,542.7L353.3,542.5L334.6,524.0L348.0,530.2L356.7,528.0L361.6,525.0L364.8,514.8L371.7,508.3L370.9,497.6L364.2,492.4L359.9,479.7L355.0,478.0L356.9,474.5L354.3,476.4L355.3,480.5L348.0,481.2L346.2,485.9L323.4,498.5L322.7,502.6L315.1,502.0L315.7,499.3L311.4,504.1L311.5,508.1L315.6,509.0L316.4,506.2L321.0,509.9L337.1,505.1L340.0,510.9L338.6,515.1L337.0,513.4L332.5,518.7L335.3,520.8L317.0,521.6L291.0,539.8L285.6,540.5L271.5,560.3L257.2,566.5L246.9,578.3L242.5,577.9L239.5,573.8L240.7,571.4L238.9,573.2L231.5,568.5L220.0,568.9L210.2,558.9L193.6,554.1L192.4,550.6L192.3,553.9L171.3,537.9Z";
+  var MAP_PROJ = {"lon0":145.47207500000002,"lat0":-36.5602095,"coslat0":0.8032313449708288,"scale":99.42775164358383,"xmin":-3.6207195078742616,"ymin":-2.5780005000000017,"offset_x":40.0,"offset_y":93.67520654896487,"viewBox":[0,0,800,700],"melbournePx":[359.4,474.6],"targetPx":[469.0,595.6],"targetLat":-39.03,"targetLon":146.336};
+
+  function renderMap(app){
+    var proj = MAP_PROJ;
+    var wrap = document.createElement('div');
+    wrap.className = 'panel wide';
+    wrap.innerHTML =
+      '<p class="eyebrow-level">LEVEL 6 OF ' + TOTAL_LEVELS + '</p>' +
+      '<h2 class="map-title">Now for your present. Click the map to find where we\u2019re going.</h2>' +
+      '<p class="prompt">Somewhere in Victoria. Tap anywhere to start searching.</p>' +
+      '<div class="map-wrap" id="mapWrap">' +
+        '<svg id="mapSvg" class="map-svg" viewBox="0 0 800 700" xmlns="http://www.w3.org/2000/svg">' +
+          '<path d="' + VIC_PATH + '" fill="#173a63" stroke="#3EF0FF" stroke-width="3"></path>' +
+          '<g id="breadcrumbs"></g>' +
+          '<circle cx="' + proj.melbournePx[0] + '" cy="' + proj.melbournePx[1] + '" r="6" fill="#FFD23E" stroke="#0D0B1E" stroke-width="2"></circle>' +
+          '<text x="' + (proj.melbournePx[0]+10) + '" y="' + (proj.melbournePx[1]-8) + '" fill="#FFD23E" font-family="VT323" font-size="20">Melbourne (that\u2019s us)</text>' +
+        '</svg>' +
+        '<div id="mapPopup" class="map-popup" style="display:none;"></div>' +
+      '</div>' +
+      '<p class="map-status" id="mapStatus">Guesses so far: 0 &middot; Closest: \u2014</p>';
+    app.appendChild(wrap);
+
+    var svg = wrap.querySelector('#mapSvg');
+    var popup = wrap.querySelector('#mapPopup');
+    var breadcrumbs = wrap.querySelector('#breadcrumbs');
+    var statusEl = wrap.querySelector('#mapStatus');
+    var mapWrapEl = wrap.querySelector('#mapWrap');
+    var guesses = 0, closest = Infinity, solved = false;
+
+    function svgPoint(clientX, clientY){
+      var pt = svg.createSVGPoint();
+      pt.x = clientX; pt.y = clientY;
+      var ctm = svg.getScreenCTM().inverse();
+      return pt.matrixTransform(ctm);
+    }
+    function pxToLatLon(px, py){
+      var xDeg = (px - proj.offset_x)/proj.scale + proj.xmin;
+      var yDeg = (py - proj.offset_y)/proj.scale + proj.ymin;
+      var lon = xDeg/proj.coslat0 + proj.lon0;
+      var lat = proj.lat0 - yDeg;
+      return { lat: lat, lon: lon };
+    }
+    function haversine(lat1, lon1, lat2, lon2){
+      var R = 6371;
+      var dLat = (lat2-lat1) * Math.PI/180;
+      var dLon = (lon2-lon1) * Math.PI/180;
+      var a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+              Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    function flavor(km){
+      if(km <= 60) return '\uD83D\uDD25 Warm \u2014 really close.';
+      if(km <= 150) return '\uD83D\uDE0C Getting warmer.';
+      if(km <= 300) return '\u2744\uFE0F Cold.';
+      return '\uD83E\uDD76 Freezing.';
+    }
+
+    function handleClick(clientX, clientY){
+      if(solved) return;
+      var pt = svgPoint(clientX, clientY);
+      var ll = pxToLatLon(pt.x, pt.y);
+      var km = haversine(ll.lat, ll.lon, proj.targetLat, proj.targetLon);
+      guesses++;
+      if(km < closest) closest = km;
+
+      var dot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      dot.setAttribute('cx', pt.x); dot.setAttribute('cy', pt.y); dot.setAttribute('r', 5);
+      dot.setAttribute('fill', '#FF4FC3'); dot.setAttribute('opacity', '0.75');
+      breadcrumbs.appendChild(dot);
+
+      statusEl.textContent = 'Guesses so far: ' + guesses + ' \u00B7 Closest: ' + Math.round(closest) + ' km';
+
+      if(km <= 15){
+        solved = true;
+        beepWin();
+        launchConfetti();
+        popup.style.display = 'none';
+        var reveal = document.createElement('div');
+        reveal.className = 'reveal-panel';
+        reveal.innerHTML =
+          '<p class="reveal-title">\uD83C\uDF89 We\u2019re going to Wilsons Prom!</p>' +
+          '<p>Pack your hiking boots, bestie \u2014 that\u2019s your birthday present. A trip away, just us.</p>';
+        wrap.appendChild(reveal);
+        return;
+      }
+
+      beepBlip();
+      popup.style.display = 'block';
+      popup.textContent = Math.round(km) + ' km away \u2014 ' + flavor(km);
+      var wrapRect = mapWrapEl.getBoundingClientRect();
+      popup.style.left = (clientX - wrapRect.left) + 'px';
+      popup.style.top = (clientY - wrapRect.top) + 'px';
+    }
+
+    svg.addEventListener('click', function(e){ handleClick(e.clientX, e.clientY); });
+  }
+
+  // ---------- dispatch ----------
+  var ROUTE_RENDERERS = {
+    1: renderGate,
+    2: renderWelcome,
+    3: function(app){ renderRiddle(app, RIDDLES[0]); },
+    4: function(app){ renderRiddle(app, RIDDLES[1]); },
+    5: function(app){ renderRiddle(app, RIDDLES[2]); },
+    6: renderGame,
+    7: renderMap
+  };
+
+  function render(){
+    var page = currentPage();
+    var app = document.getElementById('app');
+    app.innerHTML = '';
+    document.querySelectorAll('.level-tag-fixed').forEach(function(n){ n.remove(); });
+    var tag = levelTag(page);
+    if(tag) document.body.appendChild(tag);
+    (ROUTE_RENDERERS[page] || renderGate)(app);
+    window.scrollTo(0,0);
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
