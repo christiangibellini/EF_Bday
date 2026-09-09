@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Emily's Biday Quest</title>
+<title>Emily's Birthday Quest</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%82%3C/text%3E%3C/svg%3E">
 <script>
   // Restore the real path after a GitHub Pages 404 redirect (harmless everywhere else)
@@ -372,7 +372,7 @@
     wrap.innerHTML =
       '<h1 class="title">EMILY&rsquo;S<br>BIRTHDAY QUEST</h1>' +
       '<p class="prompt" style="margin-bottom:6px;">SYSTEM LOCKED. Enter the access code to begin.</p>' +
-      '<p class="small">hint: a date that means something to us</p>' +
+      '<p class="small">hint: a date that we`re celebrating</p>' +
       '<div class="digit-row" id="digitRow"></div>' +
       '<div class="btn-row"><button class="btn" id="unlockBtn">UNLOCK</button></div>' +
       '<p class="feedback" id="gateFeedback"></p>';
@@ -452,23 +452,23 @@
   var RIDDLES = [
     {
       level: 2,
-      prompt: "Before I knew your coffee order, or your star sign, I knew this: a little spot with wood-fired pizza, and a first date that ran about four hours longer than either of us planned.\n\nType the name of the place where it all started.",
+      prompt: "Before I knew your coffee order, I knew this a little spot with wood-fired pizza that held a date that ran longer than either of us planned.\n\nType the name of the place where it all started.",
       accept: ["noi pizzeria","noi"],
       hint: "It's Italian, two words, and starts with N.",
       next: "/4"
     },
     {
       level: 3,
-      prompt: "It's not your name. It's not from a movie. It's just the word I've called you since the very beginning \u2014 the one you still look up for, even in a crowded room.\n\nWhat do I call you?",
+      prompt: "It's not your name. It's just the word I've called you since the very beginning \u2014 the one you still look up for, even in a crowded room.\n\nWhat do I call you?",
       accept: ["bestie"],
       hint: "One word. You're probably being called it in your head right now.",
       next: "/5"
     },
     {
       level: 4,
-      prompt: "You collect two kinds of beautiful things: the kind you wear, and the kind you grow.\n\nName one of your favourite things to do.",
-      accept: ["jewellery","jewelry","gardening","garden","plants","plant"],
-      hint: "Sparkly, or leafy \u2014 either answer works.",
+      prompt: "This day last year you were 27. Tomorrow you'll be 29. wow.\n\nName where we celebrated your birthday last year.",
+      accept: ["Studley Park Boathouse","Kew boathouse","boathouse"],
+      hint: "Somewhere on the river",
       next: "/6"
     }
   ];
